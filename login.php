@@ -1,16 +1,22 @@
 <?php
+
+	require("../../config.php");
 	
-	//
-
-
+	
+	//echo hash("sha512", "anu");
 	//GET ja POST muutujad
 	//var_dump($_GET);
 	//echo "<br>";
 	//var_dump($_POST);
+	//value="<?=$signupEmail;?<"
 	
+
+	//MUUTUJAD
 	$signupEmailError = "";
-	
 	$signupPasswordError = "";
+	$signupEmail = "";
+	$signupSugu = "";
+	$signupAastaError = "";
 	
 	//($_POST["signupEmail"])
 	// on üldse olemas selline muutuja
@@ -23,6 +29,10 @@
 		
 			$signupEmailError = "See väli on kohustuslik";
 		
+		} else {
+			
+			//email on olemas
+			$signupEmail = $_POST["signupEmail"];
 		}
 	
 	}
@@ -48,12 +58,18 @@
 			}
 		}
 
+	
+	// Sugu
+	if( isset( $_POST["signupSugu"] ) ){
+		
+		if(!empty( $_POST["signupSugu"] ) ){
+		
+			$signupSugu = $_POST["signupSugu"];
+			
+		}
+		
+	} 
 
-?>
-
-<?php
-
-	$signupAastaError = "";
 	
 	if(isset($_POST["signupAasta"])){
 		
@@ -63,6 +79,64 @@
 		
 		}
 	}
+
+	
+	//peab olema email ja parool
+	//ühtegi errorit
+	
+	if ( isset($_POST["signupEmail"]) && 
+		isset($_POST["signupPassword"]) &&
+		$signupEmailError == "" &&
+		empty($signupPasswordError) 
+		) {
+			
+		//salvestame andmebaasi
+		echo "Salvestan... <br>";
+		
+		echo "email: ".$signupEmail."<br>";
+		echo "password:".$_POST["signupPassword"]."<br>";
+		
+		$password = hash("sha512", $_POST["signupPassword"]);
+		
+		echo "pasword hashed: ".$password."<br>";
+		
+		
+		//echo $serverUsername;
+		
+		//ÜHENDUS
+		$database = "if16_anusada_2";
+		$mysqli = new mysqli($serverHost, $serverUsername, $serverPassword, $database);
+	
+		//connect error faili koht
+		
+		//sql rida
+		$stmt = $mysqli->prepare("INSERT INTO user_sample (email, password) VALUES (?, ?)");
+		
+		//annab infot mingi kirjavea v probleemi kohta
+		echo $mysqli->error;
+		
+		//stringina üks täht iga muutuja kohta(?), mis tüüp
+		//string - s
+		//integer - i
+		//float (double) - d 
+		//küsimärgid asendada muutujaga
+		
+		$stmt->bind_param("ss", $signupEmail, $password);
+		
+		//täida käsku
+		if($stmt->execute()) {
+			
+			echo "salvestamine õnnestus";
+			
+		} else {
+			echo "ERROR".$stmt->error;
+		}
+		
+		//panen ühenduse kinni
+		$stmt->close();
+		$mysqli->close();
+	}
+			
 ?>
 
 
@@ -94,19 +168,36 @@
 		<label>E-post</label>
 		<br>
 		
-		<input name="signupEmail" type="text"> <?php echo $signupEmailError; ?>
+		<input name="signupEmail" type="text" value="<?=$signupEmail;?>"> <?php echo $signupEmailError; ?>
 		<br>
+		
 		
 		<label>Parool</label>
 		<br>
 		<input type="password" name="signupPassword"> <?php echo $signupPasswordError; ?>
 		<br><br>
 		
-	<h2>Sugu</h2>
-	  <input type="radio" name="Sugu" value="Mees"> Mees<br>
-	  <input type="radio" name="Sugu" value="Naine"> Naine<br>
-	  <input type="radio" name="Sugu" value="Muu"> Muu
-	<br><br>
+		
+		<h2>Sugu</h2>
+		
+		<?php if($signupSugu == "Mees") { ?>
+			<input type="radio" name="signupSugu" value="Mees" checked> Mees<br>
+		<?php }else { ?>
+			<input type="radio" name="signupSugu" value="Mees"> Mees<br>
+		<?php } ?>
+		
+		<?php if($signupSugu == "Naine") { ?>
+			<input type="radio" name="signupSugu" value="Naine" checked> Naine<br>
+		<?php }else { ?>
+			<input type="radio" name="signupSugu" value="Naine"> Naine<br>
+		<?php } ?>
+		
+		<?php if($signupSugu == "Muu") { ?>
+			<input type="radio" name="signupSugu" value="Muu" checked> Muu<br>
+		<?php }else { ?>
+			<input type="radio" name="signupSugu" value="other"> Muu<br>
+		<?php } ?>
+		<br><br>
 	
 	<h2>Sünnipäev</h2>
 	<h3>Kuu</h3>
